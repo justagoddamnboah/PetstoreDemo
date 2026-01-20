@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Карточка питомца</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .pet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .pet-name {
+            font-size: 32px;
+            color: #333;
+            margin: 0;
+        }
+        .pet-price-tag {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+        .pet-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        .pet-image {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .pet-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .no-photo {
+            width: 100%;
+            height: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 16px;
+        }
+        .pet-info {
+            padding: 20px;
+        }
+        .info-section {
+            margin-bottom: 25px;
+        }
+        .info-section h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .info-value {
+            color: #333;
+            font-size: 18px;
+        }
+        .description {
+            background-color: #f0f9f0;
+            padding: 25px;
+            border-radius: 10px;
+            line-height: 1.8;
+            color: #444;
+        }
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #1976D2;
+        }
+        .btn-back {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .btn-back:hover {
+            background-color: #e0e0e0;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        /* Кнопка удаления в правом нижнем углу */
+        .delete-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+        }
+
+        /* Модальное окно подтверждения */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/navbar"></div>
+
+<div class="container">
+    <div class="pet-header">
+        <h1 class="pet-name" th:text="${pet.name}">Имя питомца</h1>
+        <div class="pet-price-tag" th:if="${pet.price != null}">
+            <span th:text="${pet.price} + ' руб.'">0 руб.</span>
+        </div>
+    </div>
+
+    <div class="pet-content">
+        <div class="pet-image">
+            <!-- Проверяем, есть ли PetInfo и photoName -->
+            <div th:if="${petInfo != null and petInfo.photoName != null and not #strings.isEmpty(petInfo.photoName)}">
+                <!-- Используем только имя файла без ручного добавления .png -->
+                <img th:src="@{'/images/' + ${petInfo.photoName}}"
+                     th:alt="${pet.name}"
+                     class="pet-photo"
+                     onerror="this.onerror=null; this.src='/images/default-pet.jpg'">
+            </div>
+
+            <!-- Если нет фото -->
+            <div th:if="${petInfo == null or petInfo.photoName == null or #strings.isEmpty(petInfo.photoName)}"
+                 class="no-photo">
+                Фото питомца временно отсутствует
+            </div>
+        </div>
+
+        <div class="pet-info">
+            <div class="info-section">
+                <h3>Основная информация</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Вид</span>
+                        <span class="info-value" th:text="${pet.species != null ? pet.species : 'Не указан'}">Вид</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Порода</span>
+                        <span class="info-value" th:text="${pet.breed != null ? pet.breed : 'Не указана'}">Порода</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Пол</span>
+                        <span class="info-value" th:text="${pet.gender != null ? pet.gender : 'Не указан'}">Пол</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Возраст</span>
+                        <span class="info-value" th:text="${pet.ageMonths != null ? pet.ageMonths + ' месяцев' : 'Не указан'}">Возраст</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Описание</h3>
+                <div class="description">
+                    <!-- Отображаем описание из PetInfo если есть -->
+                    <div th:if="${petInfo != null and petInfo.description != null and not #strings.isEmpty(petInfo.description)}">
+                        <p th:text="${petInfo.description}">
+                            Описание питомца...
+                        </p>
+                    </div>
+
+                    <!-- Если нет описания в PetInfo -->
+                    <div th:unless="${petInfo != null and petInfo.description != null and not #strings.isEmpty(petInfo.description)}">
+                        <p>
+                            Этот питомец ищет новый дом. Он здоров, активен и дружелюбен.
+                            Отлично подходит для семьи с детьми. Приучен к лотку,
+                            имеет все необходимые прививки и документы.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a th:href="@{/catalogue}" class="btn btn-back">
+            <span class="icon">←</span> Назад к поиску
+        </a>
+        <!-- ЕСЛИ питомец УЖЕ ПРОДАН (есть в orders) -->
+        <div th:if="${isPetInOrders}">
+            <div class="found-home-badge">
+                <span class="icon">🏡</span> Питомец уже нашел дом!
+            </div>
+        </div>
+        <!-- Блок для покупателей -->
+        <div sec:authorize="hasRole('CUSTOMER')">
+            <!-- ЕСЛИ питомец ДОСТУПЕН для покупки (нет в orders) -->
+            <div th:unless="${isPetInOrders}">
+                <form th:action="@{/catalogue/pet-card/add-to-cart/{id}(id=${pet.id})}"
+                      method="post"
+                      style="display: inline;">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="icon">🛒</span> Купить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка удаления в правом нижнем углу -->
+    <div class="delete-container">
+        <div sec:authorize="hasRole('MODERATOR')">
+            <button class="btn btn-danger" onclick="showDeleteModal()">
+                Удалить питомца
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Подтверждение удаления</h2>
+        <p>Вы уверены, что хотите удалить питомца <strong th:text="${pet.name}"></strong>?</p>
+        <p><em>Это действие нельзя отменить. Питомец будет удален из базы данных.</em></p>
+
+        <div class="modal-actions">
+            <button class="btn btn-back" onclick="hideDeleteModal()">Отмена</button>
+
+            <!-- Форма для удаления -->
+            <form th:action="@{/catalogue/pet-card/remove-pet/{id}(id=${pet.id})}" method="post" style="display: inline;">
+
+                <button type="submit" class="btn btn-danger">
+                    Да, удалить
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    // Функции для показа/скрытия модального окна
+    function showDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function hideDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    // Закрытие модального окна при клике вне его
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideDeleteModal();
+        }
+    });
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideDeleteModal();
+        }
+    });
+
+    // Подтверждение перед отправкой формы
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteForm = document.querySelector('form[th\\:action*="delete"]');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', function(e) {
+                const confirmed = confirm('Вы уверены, что хотите удалить этого питомца? Это действие необратимо.');
+                if (!confirmed) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
